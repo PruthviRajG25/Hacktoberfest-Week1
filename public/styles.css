@@ -1,0 +1,73 @@
+/* Touch Grass AI Custom Styles */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary-green: #2e7d32;
+  --accent-amber: #d97706;
+  --bg-nature: #f4f7f4;
+  --dark-forest: #142e18;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8faf7;
+  color: #1c2e21;
+}
+
+/* Glassmorphism Cards */
+.card-glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(46, 125, 50, 0.12);
+  box-shadow: 0 10px 30px -5px rgba(20, 46, 24, 0.05);
+}
+
+.card-dark {
+  background: #152618;
+  color: #e8f5e9;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Tab active state */
+.tab-btn.active {
+  background-color: #2e7d32;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+}
+
+/* Map container styling */
+#map {
+  height: 480px;
+  width: 100%;
+  border-radius: 1rem;
+  z-index: 10;
+}
+
+/* Leaflet control overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.pulsing-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}

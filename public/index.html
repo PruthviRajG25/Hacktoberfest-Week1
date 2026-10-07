@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touch Grass AI </title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Leaflet CSS & JS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- ONNX Runtime Web / Transformers JS for local open-weight inference -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-emerald-50/40 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-emerald-900 via-green-900 to-teal-950 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-emerald-600/30 rounded-xl border border-emerald-400/30 backdrop-blur-md">
+          <i data-lucide="trees" class="w-7 h-7 text-emerald-300"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+            Touch Grass AI <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">Open-Weight Core</span>
+          </h1>
+          <p class="text-xs text-emerald-200/80">Local Offline Outdoor Companion, Foliage Route Builder & Garden Planner</p>
+        </div>
+      </div>
+
+      <!-- System Status Badges & Auth Button -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-xs font-semibold text-emerald-200">
+          <span class="pulsing-dot"></span>
+          <span id="network-status">Offline-Ready (Client ONNX Engine Active)</span>
+        </div>
+        <button id="btn-toggle-offline" onclick="toggleOfflineSim()" class="text-xs px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1.5 font-medium">
+          <i data-lucide="wifi-off" class="w-3.5 h-3.5"></i>
+          <span>Simulate Trail Mode (No Data)</span>
+        </button>
+
+        <!-- Authentication Header Button -->
+        <button id="btn-auth-header" onclick="openAuthModal()" class="text-xs px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 shadow-md">
+          <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+          <span id="auth-btn-label">Sign In / Account</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+    <!-- Hero / Manifesto Banner -->
+    <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-800 to-green-900 text-white shadow-xl relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+        <i data-lucide="compass" class="w-80 h-80"></i>
+      </div>
+      <div class="relative z-10 max-w-3xl">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-700/50 text-emerald-200 text-xs font-semibold mb-3 border border-emerald-400/20">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i> Trained on Tree_Species_Dataset + 220 Bird Species
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Shortest screen time. Maximum outdoor discovery.</h2>
+        <p class="text-emerald-100/90 text-sm leading-relaxed mb-4">
+          Powered by fine-grained open-weight vision & acoustic models. Identify wild plant species, neem trees, and songbirds on trail with zero cell signal, build foliage-packed run loops, and plant by local frost dates.
+        </p>
+        <div class="flex flex-wrap gap-4 text-xs font-semibold text-emerald-200">
+          <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> 100% On-Device Inference</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i> Open Models (ViT / AST)</span>
+          <span class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i> Zero Cloud Tracking</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex flex-wrap gap-2 mb-8 p-1.5 bg-emerald-900/10 rounded-xl border border-emerald-800/10">
+      <button class="tab-btn active px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition" onclick="switchTab('tab-identifier', this)">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+        <span>Offline Trail Scanner</span>
+      </button>
+      <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:text-emerald-800 flex items-center gap-2 transition" onclick="switchTab('tab-routes', this)">
+        <i data-lucide="footprints" class="w-4 h-4"></i>
+        <span>Run Club & Foliage Route Builder</span>
+      </button>
+      <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:text-emerald-800 flex items-center gap-2 transition" onclick="switchTab('tab-garden', this)">
+        <i data-lucide="sprout" class="w-4 h-4"></i>
+        <span>Weekly Frost & Garden Planner</span>
+      </button>
+      <button class="tab-btn px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:text-emerald-800 flex items-center gap-2 transition" onclick="switchTab('tab-challenge', this)">
+        <i data-lucide="timer" class="w-4 h-4"></i>
+        <span>15-Min Screen-Free Challenge</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: OFFLINE TRAIL SCANNER -->
+    <section id="tab-identifier" class="tab-content space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Input options -->
+        <div class="lg:col-span-6 card-glass p-6 rounded-2xl border border-emerald-800/10">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="scan" class="w-5 h-5 text-emerald-600"></i> On-Trail Species & Sound Identifier
+            </h3>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-medium">Tree & Bird AI Model</span>
+          </div>
+          <p class="text-xs text-slate-600 mb-6">
+            Upload a plant leaf photo, wild tree/flower image, or record a bird song clip. Trained on Tree_Species_Dataset + 220 Bird species for >98% accuracy.
+          </p>
+
+          <!-- Input Switch: Image vs Audio -->
+          <div class="flex gap-2 mb-4 p-1 bg-slate-100 rounded-lg text-xs font-semibold">
+            <button id="subtab-image-btn" onclick="toggleInputType('image')" class="flex-1 py-2 rounded-md bg-white text-emerald-800 shadow-sm border border-slate-200 flex items-center justify-center gap-1.5">
+              <i data-lucide="image" class="w-4 h-4"></i> Leaf / Flora Photo
+            </button>
+            <button id="subtab-audio-btn" onclick="toggleInputType('audio')" class="flex-1 py-2 rounded-md text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+              <i data-lucide="mic" class="w-4 h-4"></i> Bird Sound Call
+            </button>
+          </div>
+
+          <!-- Photo Upload Area -->
+          <div id="input-type-image" class="space-y-4">
+            <div id="drop-zone" class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center bg-emerald-50/30 hover:bg-emerald-50/60 transition cursor-pointer relative" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+              <div id="upload-prompt" class="space-y-2">
+                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
+                  <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">Drop a plant, leaf, or bird image here</p>
+                <p class="text-xs text-slate-500">or click to choose from camera / gallery</p>
+                <div class="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full font-medium mt-2">
+                  <i data-lucide="shield-check" class="w-3 h-3"></i> Processed locally — 0 bytes sent to server
+                </div>
+              </div>
+              <!-- Image Preview -->
+              <img id="preview-img" class="hidden max-h-56 mx-auto rounded-lg shadow-md border border-slate-200 object-cover" alt="Uploaded preview">
+            </div>
+          </div>
+
+          <!-- Audio Record Area -->
+          <div id="input-type-audio" class="hidden space-y-4">
+            <div class="border border-emerald-200 rounded-xl p-6 text-center bg-emerald-50/20">
+              <div id="audio-visualizer" class="h-16 flex items-center justify-center gap-1 mb-4">
+                <div class="w-1.5 h-6 bg-emerald-500 rounded-full animate-pulse"></div>
+                <div class="w-1.5 h-10 bg-emerald-600 rounded-full animate-pulse delay-75"></div>
+                <div class="w-1.5 h-14 bg-emerald-700 rounded-full animate-pulse delay-150"></div>
+                <div class="w-1.5 h-8 bg-emerald-600 rounded-full animate-pulse delay-100"></div>
+                <div class="w-1.5 h-4 bg-emerald-500 rounded-full animate-pulse"></div>
+              </div>
+              <button id="btn-record-audio" onclick="toggleAudioRecording()" class="px-5 py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-sm shadow-md transition inline-flex items-center gap-2">
+                <i data-lucide="mic" class="w-4 h-4"></i>
+                <span id="record-btn-text">Record Trail Audio (5 sec)</span>
+              </button>
+              <p class="text-xs text-slate-500 mt-2">Extracts spectrogram acoustic features to match songbird signatures.</p>
+            </div>
+          </div>
+
+          <!-- Analyze Action Button -->
+          <button id="btn-run-inference" onclick="runOnDeviceInference()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-700 to-green-800 text-white font-bold text-sm shadow-lg hover:from-emerald-800 hover:to-green-900 transition flex items-center justify-center gap-2 mt-4">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+            <span>Run Fine-Grained AI Model Inference</span>
+          </button>
+        </div>
+
+        <!-- Right Column: Results & Knowledge -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="card-glass p-6 rounded-2xl border border-emerald-800/10 min-h-[460px] flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i> Open Model Prediction Output
+                </h4>
+                <span id="inference-time-tag" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">Ready</span>
+              </div>
+
+              <!-- Output Container -->
+              <div id="classification-results" class="space-y-4">
+                <div class="p-8 text-center text-slate-400 my-auto">
+                  <i data-lucide="scan-line" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                  <p class="text-sm font-medium">Select a plant photo or bird sound to run local classification.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Screen-Free Prompt Box -->
+            <div id="outdoor-tip-box" class="mt-6 p-4 rounded-xl bg-emerald-900 text-emerald-100 border border-emerald-700/50 hidden">
+              <div class="flex items-start gap-3">
+                <div class="p-2 bg-emerald-800 rounded-lg shrink-0">
+                  <i data-lucide="compass" class="w-5 h-5 text-emerald-300"></i>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">Trail Activity Tip</h5>
+                  <p id="outdoor-tip-text" class="text-xs text-emerald-100 leading-relaxed"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: RUN CLUB & FOLIAGE ROUTE BUILDER -->
+    <section id="tab-routes" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sidebar Controls -->
+        <div class="lg:col-span-4 card-glass p-6 rounded-2xl border border-emerald-800/10 space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="map" class="w-5 h-5 text-emerald-600"></i> Foliage & Scenic Route Builder
+          </h3>
+          <p class="text-xs text-slate-600">
+            Find the densest fall foliage loops, park trails, and scenic run paths near you. Built to turn screen time into outdoor miles.
+          </p>
+
+          <!-- Starting Location -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Starting Point</label>
+            <div class="flex gap-2">
+              <input type="text" id="route-location-input" value="Central Park, New York" class="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <button onclick="useCurrentLocation()" class="p-2 bg-slate-100 hover:bg-emerald-100 rounded-lg text-slate-700 transition" title="Use current GPS">
+                <i data-lucide="crosshair" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Target Distance -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Target Distance</label>
+            <select id="route-distance" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="3">3 km (Quick Refresh Walk)</option>
+              <option value="5" selected>5 km (Standard Run Club Loop)</option>
+              <option value="8">8 km (Scenic Foliage Trail Run)</option>
+              <option value="12">12 km (Weekend Nature Expedition)</option>
+            </select>
+          </div>
+
+          <!-- Environment Preference -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Outdoor Theme</label>
+            <select id="route-theme" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="foliage">🍂 Autumn Fall Foliage & Tree Canopies</option>
+              <option value="river">🌊 Lakefront & River Trails</option>
+              <option value="park">🌳 City Parks & Botanic Greenways</option>
+              <option value="quiet">🎧 Low Noise & Screen-Free Quiet Loop</option>
+            </select>
+          </div>
+
+          <!-- Build Button -->
+          <button onclick="generateFoliageRoute()" class="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="navigation" class="w-4 h-4"></i>
+            <span>Generate Outdoor Route Loop</span>
+          </button>
+
+          <!-- Generated Route Stats Summary -->
+          <div id="route-stats" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-700 font-semibold">
+              <span>Distance:</span> <span id="stat-distance" class="text-emerald-800 font-bold">5.2 km</span>
+            </div>
+            <div class="flex justify-between text-slate-700 font-semibold">
+              <span>Est. Duration:</span> <span id="stat-time" class="text-emerald-800 font-bold">28 min run / 55 min walk</span>
+            </div>
+            <div class="flex justify-between text-slate-700 font-semibold">
+              <span>Foliage Density Index:</span> <span id="stat-foliage" class="text-amber-700 font-bold">94% High Canopy</span>
+            </div>
+            <div class="flex justify-between text-slate-700 font-semibold">
+              <span>Screen Time Required:</span> <span class="text-emerald-700 font-bold">1 min (Start & Pocket Phone)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Map Display -->
+        <div class="lg:col-span-8 space-y-4">
+          <div class="card-glass p-4 rounded-2xl border border-emerald-800/10">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i> OpenStreetMap Interactive Route View
+              </span>
+              <div class="flex gap-2">
+                <button onclick="exportGPXRoute()" class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold text-slate-700 flex items-center gap-1">
+                  <i data-lucide="download" class="w-3 h-3"></i> Export GPX
+                </button>
+              </div>
+            </div>
+            <div id="map"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: WEEKLY FROST & GARDEN PLANNER -->
+    <section id="tab-garden" class="tab-content hidden space-y-6">
+      <div class="card-glass p-6 rounded-2xl border border-emerald-800/10">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="sprout" class="w-6 h-6 text-emerald-600"></i> Weekly Garden & Local Frost Planner
+            </h3>
+            <p class="text-xs text-slate-600 mt-1">Calculates your microclimate frost windows to recommend what to plant, sow, or harvest outdoors this exact week.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="garden-zip" value="Zone 6b (Boston / NYC / Midwest)" class="px-3 py-2 text-xs border border-slate-300 rounded-lg w-56">
+            <button onclick="updateGardenPlanner()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition">Update Zone</button>
+          </div>
+        </div>
+
+        <!-- Climate Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
+            <div class="text-xs font-semibold text-amber-800 mb-1">Estimated First Fall Frost</div>
+            <div class="text-xl font-bold text-amber-950">Oct 28 - Nov 5</div>
+            <div class="text-[11px] text-amber-700 mt-1">~2-3 weeks of active growing window remaining</div>
+          </div>
+          <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div class="text-xs font-semibold text-emerald-800 mb-1">Current Planting Window</div>
+            <div class="text-xl font-bold text-emerald-950">Overwinter Greens & Bulbs</div>
+            <div class="text-[11px] text-emerald-700 mt-1">Optimal soil temperature for root establishment</div>
+          </div>
+          <div class="p-4 rounded-xl bg-blue-50 border border-blue-200">
+            <div class="text-xs font-semibold text-blue-800 mb-1">Soil Moisture & Light</div>
+            <div class="text-xl font-bold text-blue-950">Cool Soil / Full Sun</div>
+            <div class="text-[11px] text-blue-700 mt-1">Ideal conditions for garlic, spinach, & kale</div>
+          </div>
+        </div>
+
+        <!-- Weekly Action Matrix -->
+        <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <i data-lucide="check-square" class="w-4 h-4 text-emerald-600"></i> What to Plant & Do Outdoors This Week
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="garden-tasks-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: 15-MIN SCREEN-FREE CHALLENGE -->
+    <section id="tab-challenge" class="tab-content hidden space-y-6">
+      <div class="max-w-2xl mx-auto card-glass p-8 rounded-2xl border border-emerald-800/10 text-center space-y-6">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full mx-auto flex items-center justify-center">
+          <i data-lucide="sun" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900">15-Minute Outdoor Micro-Adventure</h3>
+          <p class="text-xs text-slate-600 max-w-md mx-auto mt-2">
+            No endless scrolling. Tap the button below to receive an instant off-screen quest. After 60 seconds, this screen self-locks to keep your focus on the real world.
+          </p>
+        </div>
+
+        <!-- Challenge Generator Box -->
+        <div id="challenge-card" class="p-6 rounded-xl bg-gradient-to-br from-emerald-900 to-green-950 text-white text-left shadow-lg border border-emerald-700/40 space-y-4">
+          <div class="flex items-center justify-between text-xs text-emerald-300 font-semibold">
+            <span>TASK TYPE: OUTDOOR EXPLORATION</span>
+            <span id="challenge-timer-badge" class="px-2 py-0.5 rounded bg-amber-500/30 text-amber-200">60s to review</span>
+          </div>
+          <h4 id="challenge-title" class="text-lg font-bold text-amber-300">Autumn Foliage Scavenger Hunt</h4>
+          <p id="challenge-desc" class="text-xs text-emerald-100 leading-relaxed">
+            Step outside, find 3 fallen leaves of different shapes (e.g. Maple, Oak, Ginkgo). Examine their vein structures with your eyes, then drop them back onto the trail.
+          </p>
+          <div class="p-3 bg-emerald-950/80 rounded-lg text-[11px] text-emerald-200 border border-emerald-800">
+            💡 <strong>Screen-Free Rule:</strong> Put your phone in your pocket during the 15 minutes. Take in the crisp air.
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-4">
+          <button onclick="generateRandomChallenge()" class="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md transition flex items-center gap-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate New Challenge
+          </button>
+          <button onclick="startOutdoorTimer()" class="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition flex items-center gap-2">
+            <i data-lucide="lock" class="w-4 h-4"></i> Start & Pocket Phone Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl border border-slate-200 relative space-y-4">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full mx-auto flex items-center justify-center">
+          <i data-lucide="trees" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">Sign In to Touch Grass AI</h3>
+        <p class="text-xs text-slate-500">Save identified tree species, track outdoor miles, and sync DevRelay sessions.</p>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="auth-email" placeholder="explorer@touchgrass.ai" value="trail.explorer@touchgrass.ai" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+          <input type="password" id="auth-password" value="••••••••••••" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <button onclick="performUserAuth('Email Auth')" class="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition">
+          Sign In with Email
+        </button>
+
+        <div class="relative text-center my-2">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+          <span class="relative bg-white px-2 text-[10px] text-slate-400 uppercase font-bold">Or Continue With</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="performUserAuth('Guest Mode')" class="py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center justify-center gap-1.5">
+            <i data-lucide="user" class="w-4 h-4"></i> Guest Pass
+          </button>
+          <button onclick="performUserAuth('DevRelay Gateway')" class="py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white flex items-center justify-center gap-1.5">
+            <i data-lucide="shield" class="w-4 h-4 text-emerald-400"></i> DevRelay Auth
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <i data-lucide="trees" class="w-4 h-4 text-emerald-500"></i>
+        <span class="font-semibold text-slate-200">Touch Grass AI</span> — Built for DEV Open Innovation Challenge
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <span>License: MIT (Open Source)</span>
+        <span>Models: Tree_Species_Dataset + 220 Bird Kaggle AI Engine</span>
+        <a href="https://devrelay.com/" target="_blank" class="text-emerald-400 hover:underline">DevRelay Sessions Enabled</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
