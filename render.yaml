@@ -10,3 +10,7 @@ services:
         value: 10000
       - key: NODE_VERSION
         value: 18.18.0
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=450
+      - key: SKIP_HEAVY_MODELS
+        value: "true"

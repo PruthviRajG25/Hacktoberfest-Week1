@@ -271,8 +271,18 @@ You can verify and test your deployed service on Render using the following inte
 ### Q1: Render build times out during `npm install`
 > **Fix**: Ensure your `.gitignore` includes `node_modules/` and large raw datasets so Git only uploads source files.
 
-### Q2: Service shows "Port binding failed" or status stays on "Deploying"
-> **Fix**: Make sure `server.js` listens to `process.env.PORT` (`const PORT = process.env.PORT || 3000`). Render automatically assigns the `PORT` environment variable.
+### Q2: 502 Bad Gateway / Request ID error on Render
+> **Cause**: Render's free tier has a **512 MB RAM limit**, and Node requires explicit `0.0.0.0` host binding. If the server binds to `127.0.0.1` or crashes from memory allocation during startup, Render returns a 502 Bad Gateway.
+> **Fix**:
+> 1. In [`server.js`](file:///c:/Users/ADMIN/OneDrive/Desktop/hw1/server.js), ensure `app.listen(PORT, '0.0.0.0')` is set.
+> 2. In [`render.yaml`](file:///c:/Users/ADMIN/OneDrive/Desktop/hw1/render.yaml), add `SKIP_HEAVY_MODELS="true"` and `NODE_OPTIONS="--max-old-space-size=450"`.
+> 3. Commit and push your changes to GitHub:
+>    ```bash
+>    git add .
+>    git commit -m "fix: 502 Bad Gateway host binding & 512MB RAM memory guard"
+>    git push origin main
+>    ```
+> 4. Go to Render Dashboard -> Click **Manual Deploy** -> **Clear build cache & deploy**.
 
 ### Q3: Free Tier Web Service spins down after 15 minutes of inactivity
 > **Fix**: This is normal for Render's Free Tier. When a request arrives, Render automatically spins the service back up within 30-45 seconds. The pre-warmed AI pipeline fallback ensures sub-15ms response once spun up.
