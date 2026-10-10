@@ -18,17 +18,16 @@
   <!-- ONNX Runtime Web / Transformers JS for local open-weight inference -->
   <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js"></script>
 
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-emerald-50/40 text-slate-800 min-h-screen flex flex-col">
 
   <!-- Header Banner -->
   <header class="bg-gradient-to-r from-emerald-900 via-green-900 to-teal-950 text-white shadow-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center space-x-3">
-        <div class="p-2.5 bg-emerald-600/30 rounded-xl border border-emerald-400/30 backdrop-blur-md">
-          <i data-lucide="trees" class="w-7 h-7 text-emerald-300"></i>
-        </div>
+        <img src="logo.jpg" alt="Touch Grass AI Logo" class="w-11 h-11 rounded-full border-2 border-emerald-400/60 shadow-lg object-cover shrink-0">
         <div>
           <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
             Touch Grass AI <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">Open-Weight Core</span>
@@ -50,8 +49,8 @@
 
         <!-- Authentication Header Button -->
         <button id="btn-auth-header" onclick="openAuthModal()" class="text-xs px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 shadow-md">
-          <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
-          <span id="auth-btn-label">Sign In / Account</span>
+          <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          <span id="auth-btn-label">Sign In / Sign Up</span>
         </button>
       </div>
     </div>
@@ -224,9 +223,9 @@
 
           <!-- Starting Location -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Starting Point</label>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Starting Point (India Default or World)</label>
             <div class="flex gap-2">
-              <input type="text" id="route-location-input" value="Central Park, New York" class="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <input type="text" id="route-location-input" value="Cubbon Park, Bengaluru, India" placeholder="Enter park or city" class="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
               <button onclick="useCurrentLocation()" class="p-2 bg-slate-100 hover:bg-emerald-100 rounded-lg text-slate-700 transition" title="Use current GPS">
                 <i data-lucide="crosshair" class="w-4 h-4"></i>
               </button>
@@ -309,7 +308,7 @@
             <p class="text-xs text-slate-600 mt-1">Calculates your microclimate frost windows to recommend what to plant, sow, or harvest outdoors this exact week.</p>
           </div>
           <div class="flex items-center gap-2">
-            <input type="text" id="garden-zip" value="Zone 6b (Boston / NYC / Midwest)" class="px-3 py-2 text-xs border border-slate-300 rounded-lg w-56">
+            <input type="text" id="garden-zip" placeholder="Enter your city or zone" class="px-3 py-2 text-xs border border-slate-300 rounded-lg w-56">
             <button onclick="updateGardenPlanner()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition">Update Zone</button>
           </div>
         </div>
@@ -317,19 +316,19 @@
         <!-- Climate Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
-            <div class="text-xs font-semibold text-amber-800 mb-1">Estimated First Fall Frost</div>
-            <div class="text-xl font-bold text-amber-950">Oct 28 - Nov 5</div>
-            <div class="text-[11px] text-amber-700 mt-1">~2-3 weeks of active growing window remaining</div>
+            <div class="text-xs font-semibold text-amber-800 mb-1" id="garden-card-frost-title">Estimated Frost / Climate Window</div>
+            <div class="text-xl font-bold text-amber-950" id="garden-card-frost-val">Oct 28 - Nov 5</div>
+            <div class="text-[11px] text-amber-700 mt-1" id="garden-card-frost-sub">Active outdoor growing window</div>
           </div>
           <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-            <div class="text-xs font-semibold text-emerald-800 mb-1">Current Planting Window</div>
-            <div class="text-xl font-bold text-emerald-950">Overwinter Greens & Bulbs</div>
-            <div class="text-[11px] text-emerald-700 mt-1">Optimal soil temperature for root establishment</div>
+            <div class="text-xs font-semibold text-emerald-800 mb-1" id="garden-card-window-title">Current Planting Window</div>
+            <div class="text-xl font-bold text-emerald-950" id="garden-card-window-val">Winter Rabi Crops</div>
+            <div class="text-[11px] text-emerald-700 mt-1" id="garden-card-window-sub">Optimal soil temperature for root establishment</div>
           </div>
           <div class="p-4 rounded-xl bg-blue-50 border border-blue-200">
-            <div class="text-xs font-semibold text-blue-800 mb-1">Soil Moisture & Light</div>
-            <div class="text-xl font-bold text-blue-950">Cool Soil / Full Sun</div>
-            <div class="text-[11px] text-blue-700 mt-1">Ideal conditions for garlic, spinach, & kale</div>
+            <div class="text-xs font-semibold text-blue-800 mb-1" id="garden-card-soil-title">Soil Moisture & Light</div>
+            <div class="text-xl font-bold text-blue-950" id="garden-card-soil-val">Warm Soil / Full Sun</div>
+            <div class="text-[11px] text-blue-700 mt-1" id="garden-card-soil-sub">Ideal conditions for palak, methi, & coriander</div>
           </div>
         </div>
 
@@ -365,7 +364,7 @@
           </div>
           <h4 id="challenge-title" class="text-lg font-bold text-amber-300">Autumn Foliage Scavenger Hunt</h4>
           <p id="challenge-desc" class="text-xs text-emerald-100 leading-relaxed">
-            Step outside, find 3 fallen leaves of different shapes (e.g. Maple, Oak, Ginkgo). Examine their vein structures with your eyes, then drop them back onto the trail.
+            Step outside, find 3 fallen leaves of different shapes (e.g. Maple, Oak, Neem). Examine their vein structures with your eyes, then drop them back onto the trail.
           </p>
           <div class="p-3 bg-emerald-950/80 rounded-lg text-[11px] text-emerald-200 border border-emerald-800">
             💡 <strong>Screen-Free Rule:</strong> Put your phone in your pocket during the 15 minutes. Take in the crisp air.
@@ -385,7 +384,7 @@
 
   </main>
 
-  <!-- AUTHENTICATION MODAL -->
+  <!-- AUTHENTICATION MODAL (SIGN IN & SIGN UP WITH PASSWORD ONLY) -->
   <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl border border-slate-200 relative space-y-4">
       <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
@@ -393,49 +392,43 @@
       </button>
 
       <div class="text-center space-y-1">
-        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full mx-auto flex items-center justify-center">
-          <i data-lucide="trees" class="w-6 h-6"></i>
-        </div>
-        <h3 class="text-xl font-bold text-slate-900">Sign In to Touch Grass AI</h3>
-        <p class="text-xs text-slate-500">Save identified tree species, track outdoor miles, and sync DevRelay sessions.</p>
+        <img src="logo.jpg" alt="Touch Grass AI Logo" class="w-16 h-16 rounded-full border-2 border-emerald-500/40 mx-auto shadow-md object-cover mb-2">
+        <h3 id="auth-modal-title" class="text-xl font-bold text-slate-900">Sign In to Touch Grass AI</h3>
+        <p class="text-xs text-slate-500">Access your outdoor species journal and save trail discoveries.</p>
       </div>
 
-      <div class="space-y-3">
+      <!-- Sign In vs Sign Up Tab Toggle -->
+      <div class="flex border-b border-slate-200 text-xs font-bold">
+        <button id="tab-auth-signin" onclick="switchAuthMode('signin')" class="flex-1 py-2 text-center text-emerald-700 border-b-2 border-emerald-600">
+          Sign In
+        </button>
+        <button id="tab-auth-signup" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-center text-slate-400 hover:text-slate-600">
+          Sign Up
+        </button>
+      </div>
+
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
-          <input type="email" id="auth-email" placeholder="explorer@touchgrass.ai" value="trail.explorer@touchgrass.ai" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <input type="email" id="auth-email" required placeholder="Enter your email address" autocomplete="email" class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-          <input type="password" id="auth-password" value="••••••••••••" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <input type="password" id="auth-password" required placeholder="Enter your password" autocomplete="current-password" class="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
         </div>
 
-        <button onclick="performUserAuth('Email Auth')" class="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition">
-          Sign In with Email
+        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition">
+          Sign In
         </button>
-
-        <div class="relative text-center my-2">
-          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-          <span class="relative bg-white px-2 text-[10px] text-slate-400 uppercase font-bold">Or Continue With</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="performUserAuth('Guest Mode')" class="py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center justify-center gap-1.5">
-            <i data-lucide="user" class="w-4 h-4"></i> Guest Pass
-          </button>
-          <button onclick="performUserAuth('DevRelay Gateway')" class="py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white flex items-center justify-center gap-1.5">
-            <i data-lucide="shield" class="w-4 h-4 text-emerald-400"></i> DevRelay Auth
-          </button>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 
   <!-- Footer -->
   <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <i data-lucide="trees" class="w-4 h-4 text-emerald-500"></i>
+      <div class="flex items-center gap-2.5">
+        <img src="logo.jpg" alt="Touch Grass AI Logo" class="w-7 h-7 rounded-full border border-emerald-400 object-cover shadow-sm">
         <span class="font-semibold text-slate-200">Touch Grass AI</span> — Built for DEV Open Innovation Challenge
       </div>
       <div class="flex flex-wrap items-center gap-4">

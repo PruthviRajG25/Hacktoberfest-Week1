@@ -1,9 +1,12 @@
 services:
   - type: web
     name: touch-grass-ai
-    env: node
+    runtime: node
     buildCommand: npm install
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 10000
+      - key: NODE_VERSION
+        value: 18.18.0
